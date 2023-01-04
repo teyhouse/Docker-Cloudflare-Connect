@@ -1,0 +1,8 @@
+tunnel: docker
+credentials-file: 4fdde648-6501-44d2-a5e4-6a418e1bd00a.json
+metrics: localhost:5432
+
+ingress:
+  - hostname: tunnel.fulda-cloud.com
+    service: http://nginx
+  - service: http_status:404

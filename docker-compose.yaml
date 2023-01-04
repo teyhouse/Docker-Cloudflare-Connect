@@ -1,0 +1,18 @@
+version: '3'
+services:
+
+  cloudflare:
+    image: cloudflare-connect:1.00
+    restart: unless-stopped
+    container_name: cloudflare
+    volumes:
+      - "./config:/root/.cloudflared"
+    depends_on:
+      - nginx
+  
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    container_name: nginx
+    volumes:
+      - "./www:/usr/share/nginx/html:ro"
