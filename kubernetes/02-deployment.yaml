@@ -1,0 +1,37 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: cloudflare-connect
+  namespace: default
+  labels:
+    app: cloudflare-connect
+    name: vpn
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflare-connect
+      task: vpn
+  template:
+    metadata:
+      labels:
+        app: cloudflare-connect
+        task: vpn
+    spec:
+      containers:
+        - name: cloudflare-connect
+          image: cloudflare-connect:1.00
+          imagePullPolicy: Never
+          resources:
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          volumeMounts:
+          - mountPath: /root/.cloudflared
+            name: cloudflare-connect
+      volumes:
+      - name: cloudflare-connect
+        secret:
+          defaultMode: 420
+          secretName: cloudflare-connect
