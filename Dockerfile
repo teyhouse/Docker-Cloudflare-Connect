@@ -1,26 +1,28 @@
-FROM ubuntu:lunar
-
+FROM cgr.dev/chainguard/wolfi-base:latest@sha256:8b846d00ae9ef579801f7a44c19511187d9a9527ddeae2a6faedc6e9e035abec as build
 LABEL maintainer="Tobias Thiel <administrator@nfeed.org>"
 
-ARG CLOUDFLARED_VERSION=2022.12.1
-ARG DEBIAN_FRONTEND=noninteractive
+ARG CLOUDFLARED_VERSION=2024.3.0
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends wget bash ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache wget bash && \
+    adduser -D -h /home/cloudflared cloudflared && \
+    mkdir -p /home/cloudflared/.cloudflared && \
+    chown -R cloudflared:cloudflared /home/cloudflared/.cloudflared
 
-RUN ARCH="" && \
-    case $(uname -m) in \
-        x86_64) ARCH="amd64" ;; \
-        aarch64) ARCH="arm64" ;; \
-        *) echo "Unknown build architecture $(uname -m), quitting."; exit 2 ;; \
-    esac && \
-    wget -q https://github.com/cloudflare/cloudflared/releases/download/${CLOUDFLARED_VERSION:-../latest/download}/cloudflared-linux-${ARCH}.deb && \
-    dpkg -i cloudflared-linux-${ARCH}.deb && \
-    rm cloudflared-linux-${ARCH}.deb && \
-    cloudflared --version
+RUN \
+    wget -q https://github.com/cloudflare/cloudflared/releases/download/${CLOUDFLARED_VERSION}/cloudflared-linux-amd64 -O /usr/bin/cloudflared && \
+    chmod +x /usr/bin/cloudflared
 
-RUN mkdir /root/.cloudflared
-WORKDIR /root/.cloudflared
+USER cloudflared
+
+FROM cgr.dev/chainguard/wolfi-base:latest@sha256:8b846d00ae9ef579801f7a44c19511187d9a9527ddeae2a6faedc6e9e035abec
+COPY --from=build /home/cloudflared/.cloudflared /home/cloudflared/.cloudflared
+COPY --from=build /etc/passwd /etc/passwd
+COPY --from=build /usr/bin/cloudflared /usr/bin/cloudflared
+
+USER cloudflared
+WORKDIR /home/cloudflared/.cloudflared
+
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD cloudflared --version || exit 1
+    
 ENTRYPOINT ["cloudflared", "tunnel", "run"]
-#ENTRYPOINT ["tail", "-f", "/dev/null"]
