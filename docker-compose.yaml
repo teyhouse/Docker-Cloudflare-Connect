@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     container_name: cloudflare
     volumes:
-      - "./config:/root/.cloudflared"
+      - "/home/administrator/cloudflare-config:/home/cloudflared/.cloudflared"
     depends_on:
       - nginx
   
