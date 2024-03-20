@@ -22,4 +22,7 @@ COPY --from=build /usr/bin/cloudflared /usr/bin/cloudflared
 USER cloudflared
 WORKDIR /home/cloudflared/.cloudflared
 
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD cloudflared --version || exit 1
+    
 ENTRYPOINT ["cloudflared", "tunnel", "run"]
