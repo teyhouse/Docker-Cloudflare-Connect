@@ -42,7 +42,7 @@ docker build -t cloudflare-connect:1.00 .
 docker-compose up -d
 ```
 ## cloudflared Version
-2022.12.1
+2024.3.0
   
 ## License
 MIT
